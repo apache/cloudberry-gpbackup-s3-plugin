@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/greenplum-db/gp-common-go-libs/gplog"
+	"github.com/pkg/errors"
 	"github.com/urfave/cli"
 )
 
@@ -228,7 +229,7 @@ func downloadFile(sess *session.Session, config *PluginConfig, bucket string, fi
 
 	totalBytes, err := getFileSize(downloader.S3, bucket, fileKey)
 	if err != nil {
-		return 0, -1, err
+		return 0, -1, errors.Wrap(err, fmt.Sprintf("Error getting file size for %s in bucket %s", fileKey, bucket))
 	}
 	gplog.Verbose("File %s size = %d bytes", filepath.Base(fileKey), totalBytes)
 	if totalBytes <= config.Options.DownloadChunkSize {
@@ -239,7 +240,7 @@ func downloadFile(sess *session.Session, config *PluginConfig, bucket string, fi
 				Bucket: aws.String(bucket),
 				Key:    aws.String(fileKey),
 			}); err != nil {
-			return 0, -1, err
+			return 0, -1, errors.Wrap(err, fmt.Sprintf("Error while downloading %s", fileKey))
 		}
 		if _, err = file.Write(buffer.Bytes()); err != nil {
 			return 0, -1, err
@@ -352,5 +353,5 @@ func downloadFileInParallel(sess *session.Session, downloadConcurrency int, down
 	}()
 
 	waitGroup.Wait()
-	return totalBytes, time.Since(start), finalErr
+	return totalBytes, time.Since(start), errors.Wrap(finalErr, fmt.Sprintf("Error while downloading %s", fileKey))
 }
