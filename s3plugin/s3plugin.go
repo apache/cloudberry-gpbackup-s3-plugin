@@ -190,7 +190,7 @@ func (r CustomRetryer) ShouldRetry(req *request.Request) bool {
 	willRetry := false
 	if req.Error != nil && strings.Contains(req.Error.Error(), "connection reset by peer") {
 		willRetry = true
-	} else if req.HTTPResponse.StatusCode == 404 {
+	} else if req.HTTPResponse.StatusCode == 404 && strings.Contains(req.Error.Error(), "NoSuchKey") {
 		// 404 NoSuchKey error is possible due to AWS's eventual consistency
 		// when attempting to inspect or get a file too quickly after it was
 		// uploaded. The s3 plugin does exactly this to determine the amount of

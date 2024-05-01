@@ -1,12 +1,15 @@
 package s3plugin_test
 
 import (
+	"errors"
 	"flag"
 	"net/http"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/greenplum-db/gp-common-go-libs/testhelper"
 	"github.com/greenplum-db/gpbackup-s3-plugin/s3plugin"
 	"github.com/urfave/cli"
@@ -214,10 +217,15 @@ var _ = Describe("s3_plugin tests", func() {
 	})
 	Describe("CustomRetryer", func() {
 		DescribeTable("validate retryer on different http status codes",
-			func(httpStatusCode int, expectedRetryValue bool) {
+			func(httpStatusCode int, testError error, expectedRetryValue bool) {
 				_, _, _ = testhelper.SetupTestLogger()
+				var awsErr awserr.RequestFailure
+				if testError != nil {
+					awsErr = awserr.NewRequestFailure(awserr.New(request.ErrCodeRequestError, testError.Error(), testError), httpStatusCode, "")
+				}
 				req := &request.Request{
 					HTTPResponse: &http.Response{StatusCode: httpStatusCode},
+					Error:        awsErr,
 				}
 				retryer := s3plugin.CustomRetryer{DefaultRetryer: client.DefaultRetryer{NumMaxRetries: 5}}
 				retryValue := retryer.ShouldRetry(req)
@@ -225,8 +233,11 @@ var _ = Describe("s3_plugin tests", func() {
 					Fail("unexpected retry behavior")
 				}
 			},
-			Entry("status OK", 200, false),
-			Entry("NoSuchKey", 404, true),
+			Entry("status OK", 200, nil, false),
+			Entry("connection reset", 104, errors.New("connection reset by peer"), true),
+			Entry("NoSuchKey", 404, awserr.New(s3.ErrCodeNoSuchKey, "No Such Key", nil), true),
+			Entry("NoSuchBucket", 404, awserr.New(s3.ErrCodeNoSuchBucket, "No Such Bucket", nil), false),
+			Entry("NotFound", 404, awserr.New("NotFound", "Not Found", nil), false),
 		)
 	})
 })
