@@ -61,6 +61,7 @@ type PluginOptions struct {
 	Folder                       string `yaml:"folder"`
 	HttpProxy                    string `yaml:"http_proxy"`
 	Region                       string `yaml:"region"`
+	RemoveDuplicateBucket        string `yaml:"remove_duplicate_bucket"`
 	RestoreMaxConcurrentRequests string `yaml:"restore_max_concurrent_requests"`
 	RestoreMultipartChunksize    string `yaml:"restore_multipart_chunksize"`
 	PgPort                       string `yaml:"pgport"`
@@ -111,6 +112,9 @@ func InitializeAndValidateConfig(config *PluginConfig) error {
 	if opt.Encryption == "" {
 		opt.Encryption = "on"
 	}
+	if opt.RemoveDuplicateBucket == "" {
+		opt.RemoveDuplicateBucket = "false"
+	}
 	opt.UploadChunkSize = DefaultUploadChunkSize
 	opt.UploadConcurrency = DefaultConcurrency
 	opt.DownloadChunkSize = DefaultDownloadChunkSize
@@ -138,6 +142,9 @@ func InitializeAndValidateConfig(config *PluginConfig) error {
 	}
 	if opt.Encryption != "on" && opt.Encryption != "off" {
 		errTxt += fmt.Sprintf("Invalid encryption configuration. Valid choices are on or off.\n")
+	}
+	if opt.RemoveDuplicateBucket != "true" && opt.RemoveDuplicateBucket != "false" {
+		errTxt += fmt.Sprintf("Invalid value for remove_duplicate_bucket. Valid choices are true or false.\n")
 	}
 	if opt.BackupMultipartChunksize != "" {
 		chunkSize, err := bytesize.Parse(opt.BackupMultipartChunksize)
@@ -254,6 +261,10 @@ func readConfigAndStartSession(c *cli.Context) (*PluginConfig, *session.Session,
 	sess, err := session.NewSession(awsConfig)
 	if err != nil {
 		return nil, nil, err
+	}
+
+	if config.Options.RemoveDuplicateBucket == "true" {
+		sess.Handlers.Build.PushFront(removeBucketFromPath)
 	}
 	return config, sess, nil
 }
@@ -425,4 +436,20 @@ func DeleteDirectory(c *cli.Context) error {
 func IsValidTimestamp(timestamp string) bool {
 	timestampFormat := regexp.MustCompile(`^([0-9]{14})$`)
 	return timestampFormat.MatchString(timestamp)
+}
+
+// Some AWS SDK automatically prepends "/BucketName/" to any request's path, which breaks placement
+// of all objects when doing backups or restores with an Endpoint URL that already directs requests
+// to the correct bucket. To circumvent this, we manually remove the initial Bucket reference from
+// the path in this case. NOTE: this does not happen in if an IP address is used directly, so we
+// attempt to parse IP addresses and do not invoke this removal if found.
+func removeBucketFromPath(req *request.Request) {
+	req.Operation.HTTPPath = strings.Replace(req.Operation.HTTPPath, "/{Bucket}", "", -1)
+	if !strings.HasPrefix(req.Operation.HTTPPath, "/") {
+		req.Operation.HTTPPath = "/" + req.Operation.HTTPPath
+	}
+	req.HTTPRequest.URL.Path = strings.Replace(req.HTTPRequest.URL.Path, "/{Bucket}", "", -1)
+	if !strings.HasPrefix(req.HTTPRequest.URL.Path, "/") {
+		req.HTTPRequest.URL.Path = "/" + req.HTTPRequest.URL.Path
+	}
 }
