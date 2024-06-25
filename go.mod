@@ -1,10 +1,10 @@
-module github.com/greenplum-db/gpbackup-s3-plugin
+module github.com/cloudberrydb/gpbackup-s3-plugin
 
 go 1.19
 
 require (
 	github.com/aws/aws-sdk-go v1.44.257
-	github.com/greenplum-db/gp-common-go-libs v1.0.16
+	github.com/cloudberrydb/gp-common-go-libs v1.0.11
 	github.com/inhies/go-bytesize v0.0.0-20220417184213-4913239db9cf
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/onsi/ginkgo/v2 v2.13.0
