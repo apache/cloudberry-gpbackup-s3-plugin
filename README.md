@@ -1,9 +1,12 @@
 ## Using the S3 Storage Plugin with gpbackup and gprestore
-The S3 plugin lets you use an Amazon Simple Storage Service (Amazon S3) location to store and retrieve backups when you run gpbackup and gprestore.
 
-To use the S3 plugin, you specify the location of the plugin and the AWS login and backup location in a configuration file. When you run gpbackup or gprestore, you specify the configuration file with the option --plugin-config.
+> This project is forked from [greenplum-db/gpbackup-s3-plugin-archive](https://github.com/greenplum-db/gpbackup-s3-plugin-archive/) and customized for Cloudberry Database.
 
-If you perform a backup operation with the gpbackup option --plugin-config, you must also specify the --plugin-config option when you restore the backup with gprestore.
+The S3 plugin lets you use an Amazon Simple Storage Service (Amazon S3) location to store and retrieve backups when you run `gpbackup` and `gprestore`.
+
+To use the S3 plugin, you specify the location of the plugin and the AWS login and backup location in a configuration file. When you run gpbackup or gprestore, you specify the configuration file with the option `--plugin-config`.
+
+If you perform a backup operation with the gpbackup option `--plugin-config`, you must also specify the `--plugin-config` option when you restore the backup with gprestore.
 
 The S3 plugin supports both AWS and custom storage servers that implement the S3 interface.
 
@@ -14,7 +17,7 @@ The project requires the Go Programming language version 1.13 or higher. Follow 
 ## Downloading
 
 ```bash
-go get github.com/greenplum-db/gpbackup-s3-plugin/...
+go get github.com/cloudberrydb/gpbackup-s3-plugin/...
 ```
 
 ## Building and installing binaries
@@ -56,7 +59,7 @@ options:
   http_proxy: <http-proxy>
  ```
 
-`executablepath` is the absolute path to the plugin executable (eg: use the fully expanded path of $GPHOME/bin/gpbackup_s3_plugin).
+`executablepath` is the absolute path to the plugin executable (eg: use the fully expanded path of `$GPHOME/bin/gpbackup_s3_plugin`).
 
 Below are the s3 plugin options
 
@@ -100,6 +103,6 @@ gpdb-backup/test/backup3/backups/YYYYMMDD/YYYYMMDDHHMMSS/
 ```
 
 ## Notes
-The S3 storage plugin application must be in the same location on every Greenplum Database host. The configuration file is required only on the coordinator host.
+The S3 storage plugin application must be in the same location on every Cloudberry Database host. The configuration file is required only on the coordinator host.
 
 Using Amazon S3 to back up and restore data requires an Amazon AWS account with access to the Amazon S3 bucket. The Amazon S3 bucket permissions required are Upload/Delete for the S3 user ID that uploads the files and Open/Download and View for the S3 user ID that accesses the files.
