@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/greenplum-db/gp-common-go-libs/gplog"
+	"github.com/cloudberrydb/gp-common-go-libs/gplog"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli"
 )

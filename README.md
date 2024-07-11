@@ -17,7 +17,7 @@ The project requires the Go Programming language version 1.13 or higher. Follow 
 ## Downloading
 
 ```bash
-go get github.com/cloudberrydb/gpbackup-s3-plugin/...
+git clone https://github.com/cloudberrydb/gpbackup-s3-plugin.git
 ```
 
 ## Building and installing binaries
@@ -27,13 +27,16 @@ Switch your current working directory to the above `gpbackup_s3_plugin` source d
 ```bash
 make build
 ```
-This will build the `gpbackup_s3_plugin` binary in `$HOME/go/bin`.
+This will build the `gpbackup_s3_plugin` binary in `$GOPATH/bin`.
 
 **Install**
 ```bash
 make install
 ```
-This will install the `gpbackup_s3_plugin` binary on all the segments hosts. Note that GPDB must be sourced for this to work.
+This will install the `gpbackup_s3_plugin` binary on all hosts of cluster.
+Note that Cloudberry Database coordinator need to run on this host and /usr/local/cloudberry-db/greenplum_path.sh needs to be sourced.
+
+Or manually copy `gpbackup_s3_plugin` binary to /usr/local/cloudberry-db/bin on all hosts of cluster.
 
 ## Test
 ```bash
